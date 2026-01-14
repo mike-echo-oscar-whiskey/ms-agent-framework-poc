@@ -1,0 +1,36 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+mat-toolbar {
+  .app-title {
+    font-weight: 500;
+  }
+
+  .spacer {
+    flex: 1;
+  }
+
+  nav {
+    display: flex;
+    gap: 8px;
+
+    a {
+      mat-icon {
+        margin-right: 8px;
+      }
+
+      &.active {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+}
+
+main {
+  flex: 1;
+  overflow-y: auto;
+  background-color: var(--mat-sys-surface);
+}

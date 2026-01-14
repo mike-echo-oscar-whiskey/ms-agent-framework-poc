@@ -1,0 +1,126 @@
+<div class="group-chat-demo">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Multi-Agent Group Chat Demo</mat-card-title>
+      <mat-card-subtitle>
+        Demonstrates multi-agent collaboration on a topic
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="info-box">
+        <mat-icon>info</mat-icon>
+        <span>
+          Four agents collaborate on a topic: <strong>Product Manager</strong>, <strong>Tech Lead</strong>,
+          <strong>Designer</strong>, and <strong>QA Engineer</strong>. A <strong>Moderator</strong> summarizes the consensus.
+        </span>
+      </div>
+
+      <div class="participants">
+        <span class="label">Participants:</span>
+        <div class="participant-chips">
+          <mat-chip class="agent-primary">
+            <mat-icon>person</mat-icon>
+            Product Manager
+          </mat-chip>
+          <mat-chip class="agent-tertiary">
+            <mat-icon>code</mat-icon>
+            Tech Lead
+          </mat-chip>
+          <mat-chip class="agent-secondary">
+            <mat-icon>palette</mat-icon>
+            Designer
+          </mat-chip>
+          <mat-chip class="agent-error">
+            <mat-icon>bug_report</mat-icon>
+            QA Engineer
+          </mat-chip>
+        </div>
+      </div>
+
+      <div class="example-chips">
+        <span class="chip-label">Try a topic:</span>
+        @for (example of exampleTopics; track example) {
+          <mat-chip (click)="setExample(example)">
+            {{ example.substring(0, 40) }}{{ example.length > 40 ? '...' : '' }}
+          </mat-chip>
+        }
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Discussion Topic</mat-label>
+        <textarea
+          matInput
+          [(ngModel)]="topic"
+          rows="2"
+          placeholder="Enter a topic for discussion..."
+        ></textarea>
+      </mat-form-field>
+
+      <div class="turns-control">
+        <label>Discussion turns: {{ maxTurns() }}</label>
+        <mat-slider min="2" max="6" step="1" discrete>
+          <input matSliderThumb [(ngModel)]="maxTurns">
+        </mat-slider>
+      </div>
+
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="executeGroupChat()"
+        [disabled]="isLoading() || !topic()"
+      >
+        @if (isLoading()) {
+          <mat-spinner diameter="20"></mat-spinner>
+          <span>Agents discussing...</span>
+        } @else {
+          <mat-icon>groups</mat-icon>
+          <span>Start Group Discussion</span>
+        }
+      </button>
+    </mat-card-content>
+  </mat-card>
+
+  @if (error()) {
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon>error</mat-icon>
+        <span>{{ error() }}</span>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (result()) {
+    <mat-card class="discussion-card">
+      <mat-card-header>
+        <mat-card-title>Group Discussion</mat-card-title>
+        <mat-card-subtitle>
+          {{ result()!.messages.length }} turns | Completed in {{ result()!.executionTimeMs }}ms | {{ result()!.totalTokens }} tokens
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="messages-container">
+          @for (msg of result()!.messages; track msg.turnNumber) {
+            <div class="message" [class]="getAgentColorClass(msg.agentName)">
+              <div class="message-header">
+                <mat-icon>{{ getAgentIcon(msg.agentName) }}</mat-icon>
+                <span class="agent-name">{{ msg.agentName }}</span>
+                <span class="turn-number">Turn {{ msg.turnNumber }}</span>
+              </div>
+              <div class="message-content">{{ msg.message }}</div>
+            </div>
+          }
+        </div>
+
+        <div class="consensus-section">
+          <h3>
+            <mat-icon>summarize</mat-icon>
+            Moderator's Summary
+          </h3>
+          <p class="consensus-text">{{ result()!.finalConsensus }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

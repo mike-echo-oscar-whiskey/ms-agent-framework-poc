@@ -1,0 +1,103 @@
+<div class="workflow-demo">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Customer Support Triage Demo</mat-card-title>
+      <mat-card-subtitle>
+        Test the multi-agent workflow that classifies and routes support tickets
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="example-chips">
+        <span class="chip-label">Try an example:</span>
+        @for (example of exampleInputs; track example) {
+          <mat-chip (click)="setExample(example)">
+            {{ example.substring(0, 40) }}{{ example.length > 40 ? '...' : '' }}
+          </mat-chip>
+        }
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Support Ticket Input</mat-label>
+        <textarea
+          matInput
+          [(ngModel)]="input"
+          rows="4"
+          placeholder="Enter a customer support message..."
+        ></textarea>
+      </mat-form-field>
+
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="executeDemo()"
+        [disabled]="isLoading() || !input()"
+      >
+        @if (isLoading()) {
+          <mat-spinner diameter="20"></mat-spinner>
+          <span>Processing...</span>
+        } @else {
+          <ng-container>
+            <mat-icon>play_arrow</mat-icon>
+            <span>Execute Workflow</span>
+          </ng-container>
+        }
+      </button>
+    </mat-card-content>
+  </mat-card>
+
+  @if (error()) {
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon>error</mat-icon>
+        <span>{{ error() }}</span>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (result()) {
+    <mat-card class="result-card">
+      <mat-card-header>
+        <mat-card-title>Workflow Result</mat-card-title>
+        <mat-card-subtitle>
+          Completed in {{ result()!.executionTimeMs }}ms | {{ result()!.totalTokens }} tokens
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="final-response">
+          <h3>Final Response</h3>
+          <p>{{ result()!.finalResponse }}</p>
+        </div>
+
+        <h3>Agent Steps</h3>
+        <mat-accordion>
+          @for (step of result()!.agentResults; track step.agentName; let i = $index) {
+            <mat-expansion-panel>
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <span class="step-number">{{ i + 1 }}</span>
+                  {{ step.agentName }}
+                </mat-panel-title>
+                <mat-panel-description>
+                  {{ step.executionTimeMs }}ms | {{ step.tokensUsed }} tokens
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <div class="step-details">
+                <div class="step-section">
+                  <h4>Input</h4>
+                  <pre>{{ step.input }}</pre>
+                </div>
+                <div class="step-section">
+                  <h4>Output</h4>
+                  <pre>{{ step.output }}</pre>
+                </div>
+              </div>
+            </mat-expansion-panel>
+          }
+        </mat-accordion>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

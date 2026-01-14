@@ -1,0 +1,34 @@
+<mat-toolbar color="primary">
+  <span class="app-title">MAF Demo</span>
+  <span class="spacer"></span>
+  <nav>
+    <a mat-button routerLink="/workflow-demo" routerLinkActive="active">
+      <mat-icon>account_tree</mat-icon>
+      Workflow
+    </a>
+    <a mat-button routerLink="/tools-demo" routerLinkActive="active">
+      <mat-icon>build</mat-icon>
+      Tools
+    </a>
+    <a mat-button routerLink="/conversation-demo" routerLinkActive="active">
+      <mat-icon>chat</mat-icon>
+      Memory
+    </a>
+    <a mat-button routerLink="/conditional-routing-demo" routerLinkActive="active">
+      <mat-icon>alt_route</mat-icon>
+      Routing
+    </a>
+    <a mat-button routerLink="/handoff-demo" routerLinkActive="active">
+      <mat-icon>swap_horiz</mat-icon>
+      Handoff
+    </a>
+    <a mat-button routerLink="/group-chat-demo" routerLinkActive="active">
+      <mat-icon>groups</mat-icon>
+      Group Chat
+    </a>
+  </nav>
+</mat-toolbar>
+
+<main>
+  <router-outlet />
+</main>

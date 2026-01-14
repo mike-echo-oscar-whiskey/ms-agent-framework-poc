@@ -1,0 +1,102 @@
+<div class="tools-demo">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Agent with Function Tools Demo</mat-card-title>
+      <mat-card-subtitle>
+        Demonstrates MAF's tool use capability - the agent can call functions to look up account information
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="info-box">
+        <mat-icon>info</mat-icon>
+        <span>
+          This agent has access to three tools: <strong>GetAccountInfo</strong>, <strong>GetAccountBalance</strong>, and <strong>GetRecentTransactions</strong>.
+          Try asking about accounts using test emails: john&#64;example.com or jane&#64;example.com
+        </span>
+      </div>
+
+      <div class="example-chips">
+        <span class="chip-label">Try an example:</span>
+        @for (example of exampleInputs; track example) {
+          <mat-chip (click)="setExample(example)">
+            {{ example.substring(0, 50) }}{{ example.length > 50 ? '...' : '' }}
+          </mat-chip>
+        }
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Your Question</mat-label>
+        <textarea
+          matInput
+          [(ngModel)]="input"
+          rows="3"
+          placeholder="Ask about an account..."
+        ></textarea>
+      </mat-form-field>
+
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="executeToolsDemo()"
+        [disabled]="isLoading() || !input()"
+      >
+        @if (isLoading()) {
+          <mat-spinner diameter="20"></mat-spinner>
+          <span>Processing...</span>
+        } @else {
+          <ng-container>
+            <mat-icon>build</mat-icon>
+            <span>Execute Agent with Tools</span>
+          </ng-container>
+        }
+      </button>
+    </mat-card-content>
+  </mat-card>
+
+  @if (error()) {
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon>error</mat-icon>
+        <span>{{ error() }}</span>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (result()) {
+    <mat-card class="result-card">
+      <mat-card-header>
+        <mat-card-title>Agent Response</mat-card-title>
+        <mat-card-subtitle>
+          Completed in {{ result()!.executionTimeMs }}ms | {{ result()!.totalTokens }} tokens
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        @if (result()!.toolCalls.length > 0) {
+          <div class="tool-calls-section">
+            <h3>
+              <mat-icon>build</mat-icon>
+              Tool Calls Made
+            </h3>
+            <mat-list>
+              @for (toolCall of result()!.toolCalls; track toolCall.toolName) {
+                <mat-list-item>
+                  <mat-icon matListItemIcon>function</mat-icon>
+                  <div matListItemTitle>{{ toolCall.toolName }}</div>
+                  <div matListItemLine>Arguments: {{ toolCall.arguments }}</div>
+                  <div matListItemLine>Result: {{ toolCall.result }}</div>
+                </mat-list-item>
+              }
+            </mat-list>
+          </div>
+        }
+
+        <div class="response-section">
+          <h3>Final Response</h3>
+          <p class="response-text">{{ result()!.response }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

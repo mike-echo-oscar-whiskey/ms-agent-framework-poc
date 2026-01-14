@@ -1,0 +1,127 @@
+<div class="conversation-demo">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>AgentThread - Conversation Memory Demo</mat-card-title>
+      <mat-card-subtitle>
+        Demonstrates MAF's AgentThread for multi-turn conversations with memory
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="info-box">
+        <mat-icon>info</mat-icon>
+        <span>
+          This agent <strong>remembers context</strong> from your conversation. Try introducing yourself,
+          then ask follow-up questions. The agent will recall details you mentioned earlier.
+        </span>
+      </div>
+
+      <div class="conversation-id">
+        <mat-icon>chat</mat-icon>
+        <span>Conversation ID: <code>{{ conversationId() }}</code></span>
+      </div>
+
+      <div class="example-chips">
+        <span class="chip-label">Try in sequence:</span>
+        @for (example of exampleMessages; track example) {
+          <mat-chip (click)="setExample(example)">
+            {{ example.substring(0, 40) }}{{ example.length > 40 ? '...' : '' }}
+          </mat-chip>
+        }
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Your Message</mat-label>
+        <textarea
+          matInput
+          [(ngModel)]="message"
+          rows="2"
+          placeholder="Type a message..."
+          (keydown.enter)="!isLoading() && message() && sendMessage()"
+        ></textarea>
+      </mat-form-field>
+
+      <div class="button-row">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="sendMessage()"
+          [disabled]="isLoading() || !message()"
+        >
+          @if (isLoading()) {
+            <mat-spinner diameter="20"></mat-spinner>
+            <span>Sending...</span>
+          } @else {
+            <mat-icon>send</mat-icon>
+            <span>Send Message</span>
+          }
+        </button>
+
+        <button
+          mat-stroked-button
+          (click)="serializeThread()"
+          [disabled]="turns().length === 0"
+        >
+          <mat-icon>save</mat-icon>
+          <span>Save Thread</span>
+        </button>
+
+        <button
+          mat-stroked-button
+          color="warn"
+          (click)="clearConversation()"
+        >
+          <mat-icon>delete</mat-icon>
+          <span>New Conversation</span>
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  @if (error()) {
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon>error</mat-icon>
+        <span>{{ error() }}</span>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (turns().length > 0) {
+    <mat-card class="conversation-card">
+      <mat-card-header>
+        <mat-card-title>Conversation History</mat-card-title>
+        <mat-card-subtitle>
+          {{ turns().length }} messages | Last response: {{ executionTimeMs() }}ms
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="messages-container">
+          @for (turn of turns(); track $index) {
+            <div class="message" [class.user]="turn.role === 'user'" [class.assistant]="turn.role === 'assistant'" [class.system]="turn.role === 'system'">
+              <div class="message-header">
+                <mat-icon>{{ turn.role === 'user' ? 'person' : turn.role === 'assistant' ? 'smart_toy' : 'info' }}</mat-icon>
+                <span class="role">{{ turn.role }}</span>
+              </div>
+              <div class="message-content">{{ turn.message }}</div>
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (serializedThread()) {
+    <mat-card class="serialized-card">
+      <mat-card-header>
+        <mat-card-title>Serialized Thread</mat-card-title>
+        <mat-card-subtitle>Thread state saved for persistence</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <pre class="json-preview">{{ serializedThread() }}</pre>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>
