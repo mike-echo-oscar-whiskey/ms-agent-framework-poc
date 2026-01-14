@@ -64,11 +64,8 @@ Deze POC demonstreert de volgende MAF mogelijkheden:
 | **Multi-Agent Workflow** | `/workflow-demo` | `WorkflowBuilder`, `AddEdge` | Sequentiële agent pipeline |
 | **Function Tools** | `/tools-demo` | `AIFunctionFactory`, `CreateAIAgent` | Agent met callable tools |
 | **Conversation Memory** | `/conversation-demo` | `AgentThread`, `Serialize` | Multi-turn gesprekken met geheugen |
-| **Conditional Routing** | `/conditional-routing-demo` | Agent + code logica | Dynamische routing op basis van classificatie |
-| **Agent Handoff** | `/handoff-demo` | `AIFunctionFactory` (handoff tools) | Triage agent met handoff tools voor doorverwijzing |
-| **Group Chat** | `/group-chat-demo` | Orchestrator patroon | Orchestrator selecteert volgende spreker |
-
-> **Let op**: Routing is een patroon met code logica. Handoff en GroupChat gebruiken MAF concepten (function tools, orchestrator) maar zijn geen directe MAF API's.
+| **Agent Handoff** | `/handoff-demo` | `HandoffsWorkflowBuilder`, `WithHandoffs` | Triage agent met automatische handoff tools |
+| **Group Chat** | `/group-chat-demo` | `GroupChatWorkflowBuilder`, `RoundRobinGroupChatManager` | Multi-agent discussie met turn management |
 
 ---
 
@@ -178,6 +175,22 @@ Demonstreert hoe meerdere AI-agents samenwerken in een sequentiële workflow:
 - Drie agents (Classifier → Router → Specialist) die sequentieel samenwerken
 - Per agent zie je input, output, token gebruik en executietijd
 
+```mermaid
+sequenceDiagram
+    participant User
+    participant Classifier
+    participant Router
+    participant Specialist
+
+    User->>Classifier: "Ik ben dubbel gefactureerd"
+    Classifier->>Classifier: Analyseer ticket
+    Classifier->>Router: "Category: billing<br/>Customer Issue: dubbel gefactureerd"
+    Router->>Router: Bepaal specialist
+    Router->>Specialist: "Specialist: billing-specialist<br/>Customer Issue: dubbel gefactureerd"
+    Specialist->>Specialist: Genereer antwoord
+    Specialist-->>User: "Ik begrijp uw probleem..."
+```
+
 ### 🔧 Tools Demo (`/tools-demo`)
 
 **MAF Feature**: `AIFunctionFactory`, `CreateAIAgent`
@@ -185,6 +198,22 @@ Demonstreert hoe meerdere AI-agents samenwerken in een sequentiële workflow:
 Demonstreert agents met callable function tools:
 - Agent met 3 tools: `GetAccountInfo`, `GetAccountBalance`, `GetRecentTransactions`
 - Test met emails: `john@example.com` of `jane@example.com`
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Agent
+    participant GetAccountInfo
+    participant GetAccountBalance
+
+    User->>Agent: "What is john@example.com's balance?"
+    Agent->>Agent: Bepaal benodigde tools
+    Agent->>GetAccountInfo: email: "john@example.com"
+    GetAccountInfo-->>Agent: {name: "John Doe", plan: "Premium"}
+    Agent->>GetAccountBalance: email: "john@example.com"
+    GetAccountBalance-->>Agent: {balance: "$150.00"}
+    Agent-->>User: "John Doe has a balance of $150.00"
+```
 
 ### 💬 Conversation Memory Demo (`/conversation-demo`)
 
@@ -194,32 +223,84 @@ Demonstreert multi-turn gesprekken met geheugen:
 - Agent onthoudt context van eerdere berichten
 - Thread kan worden geserialiseerd en hervat
 
-### 🔀 Conditional Routing Demo (`/conditional-routing-demo`)
+```mermaid
+sequenceDiagram
+    participant User
+    participant Agent
+    participant AgentThread
 
-**Patroon**: Classifier agent + code logica
+    User->>Agent: "Mijn naam is Alice"
+    Agent->>AgentThread: Store message
+    Agent-->>User: "Hallo Alice!"
 
-Demonstreert dynamische routing:
-- Classifier bepaalt categorie (BILLING, TECHNICAL, SALES, GENERAL)
-- Code routeert naar juiste specialist
+    User->>Agent: "Wat is mijn naam?"
+    Agent->>AgentThread: Retrieve context
+    AgentThread-->>Agent: Previous: "Mijn naam is Alice"
+    Agent-->>User: "Je naam is Alice"
+
+    Note over AgentThread: Thread kan worden<br/>geserialiseerd voor<br/>later gebruik
+```
 
 ### 🤝 Handoff Demo (`/handoff-demo`)
 
-**Patroon**: Function Tools voor Handoff (zoals MAF Python `HandoffBuilder`)
+**MAF Feature**: `HandoffsWorkflowBuilder`, `WithHandoffs()`
 
-Demonstreert autonome agent handoffs via **function tools**:
-- Triage agent heeft handoff tools: `handoff_to_billing`, `handoff_to_technical`, `handoff_to_account`
-- Wanneer de agent een handoff tool aanroept, wordt de conversatie overgedragen
-- Dit is het authentieke MAF patroon - geen text parsing maar tool calls
+Demonstreert autonome agent handoffs via MAF's handoff workflow:
+- Triage agent kan handoff doen naar: BillingSpecialist, TechnicalSpecialist, AccountSpecialist
+- MAF genereert automatisch handoff tools op basis van agent descriptions
+- Dit is het authentieke MAF patroon
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant TriageAgent
+    participant MAF as MAF Handoff Tools
+    participant BillingSpecialist
+
+    User->>TriageAgent: "Help met mijn factuur"
+    TriageAgent->>TriageAgent: Analyseer request
+    TriageAgent->>MAF: handoff_to_BillingSpecialist()
+    MAF->>BillingSpecialist: Transfer conversation
+    Note over MAF: MAF genereert tools<br/>automatisch op basis<br/>van agent descriptions
+    BillingSpecialist->>BillingSpecialist: Verwerk billing vraag
+    BillingSpecialist-->>User: "Ik help u graag met uw factuur..."
+```
 
 ### 👥 Group Chat Demo (`/group-chat-demo`)
 
-**Patroon**: Orchestrator met Speaker Selectie (zoals MAF Python `GroupChatBuilder`)
+**MAF Feature**: `GroupChatWorkflowBuilder`, `RoundRobinGroupChatManager`
 
-Demonstreert multi-agent samenwerking met centrale orchestratie:
-- **Orchestrator agent** selecteert de volgende spreker op basis van context
-- Participants registry met beschrijvingen (ProductManager, TechLead, Designer, QA)
-- Berichten worden gebroadcast naar alle deelnemers
+Demonstreert multi-agent samenwerking met MAF's group chat:
+- Round-robin speaker selectie via `RoundRobinGroupChatManager`
+- Participants: ProductManager, TechLead, Designer, QAEngineer
+- Configurable termination condition (max turns)
 - Moderator syntheseert consensus aan het einde
+
+```mermaid
+sequenceDiagram
+    participant Moderator
+    participant PM as ProductManager
+    participant TL as TechLead
+    participant UX as Designer
+    participant QA as QAEngineer
+
+    Note over PM,QA: Topic: "Dark mode toevoegen"
+
+    PM->>PM: Focus op user needs
+    PM-->>TL: "Veel gebruikers vragen dark mode..."
+
+    TL->>TL: Focus op techniek
+    TL-->>UX: "We kunnen CSS variables gebruiken..."
+
+    UX->>UX: Focus op UX
+    UX-->>QA: "Contrast ratios zijn belangrijk..."
+
+    QA->>QA: Focus op quality
+    QA-->>Moderator: "We moeten accessibility testen..."
+
+    Moderator->>Moderator: Synthesize
+    Moderator-->>Moderator: "Consensus: Implementeer met<br/>CSS vars, test accessibility"
+```
 
 ---
 
@@ -455,10 +536,10 @@ curl -X POST http://localhost:5139/api/workflows/conversation \
   -H "Content-Type: application/json" \
   -d '{"conversationId": "test-123", "message": "Mijn naam is Alice"}'
 
-# Conditional routing
-curl -X POST http://localhost:5139/api/workflows/execute/conditional-routing \
+# Handoff
+curl -X POST http://localhost:5139/api/workflows/execute/handoff \
   -H "Content-Type: application/json" \
-  -d '{"input": "Ik ben dubbel gefactureerd"}'
+  -d '{"input": "Help met mijn factuur"}'
 
 # Group chat
 curl -X POST http://localhost:5139/api/workflows/execute/group-chat \
@@ -476,7 +557,6 @@ curl -X POST http://localhost:5139/api/workflows/execute/group-chat \
 |---------|----------|--------------|
 | POST | `/api/workflows/execute/demo` | Multi-agent triage workflow |
 | POST | `/api/workflows/execute/tools-demo` | Agent met function tools |
-| POST | `/api/workflows/execute/conditional-routing` | Conditional routing demo |
 | POST | `/api/workflows/execute/handoff` | Agent handoff demo |
 | POST | `/api/workflows/execute/group-chat` | Multi-agent group chat |
 
@@ -561,12 +641,10 @@ abstractmatters-agentframework-poc/
 │       ├── workflow-demo/                      # Multi-agent workflow
 │       ├── tools-demo/                         # Function tools
 │       ├── conversation-demo/                  # AgentThread memory
-│       ├── conditional-routing-demo/           # Conditional routing
 │       ├── handoff-demo/                       # Agent handoff
 │       └── group-chat-demo/                    # Group collaboration
 │
 ├── docker-compose.yaml                         # MLflow + Jaeger
-├── CLAUDE.md                                   # Development guide (EN)
 └── README.md                                   # Deze documentatie (NL)
 ```
 

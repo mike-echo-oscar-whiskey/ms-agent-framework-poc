@@ -62,20 +62,6 @@ export interface SerializeThreadResponse {
   serializedThread: string | null;
 }
 
-// Conditional routing interfaces
-export interface RoutingDecisionResponse {
-  detectedCategory: string;
-  selectedAgent: string;
-}
-
-export interface ConditionalRoutingResponse {
-  routing: RoutingDecisionResponse;
-  finalResponse: string;
-  agentResults: AgentStepResultResponse[];
-  totalTokens: number;
-  executionTimeMs: number;
-}
-
 // Handoff interfaces
 export interface HandoffEventResponse {
   fromAgent: string;
@@ -156,14 +142,6 @@ export class ApiService {
   clearConversation(conversationId: string): Observable<void> {
     return this.http.delete<void>(
       `${this.baseUrl}/workflows/conversation/${conversationId}`
-    );
-  }
-
-  // Conditional routing endpoint
-  executeConditionalRouting(request: DemoWorkflowRequest): Observable<ConditionalRoutingResponse> {
-    return this.http.post<ConditionalRoutingResponse>(
-      `${this.baseUrl}/workflows/execute/conditional-routing`,
-      request
     );
   }
 

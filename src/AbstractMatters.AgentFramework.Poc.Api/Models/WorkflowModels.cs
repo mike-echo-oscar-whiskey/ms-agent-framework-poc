@@ -39,15 +39,6 @@ public record ConversationResponse(
     long ExecutionTimeMs);
 public record SerializeThreadResponse(string? SerializedThread);
 
-// Conditional routing models
-public record RoutingDecisionResponse(string DetectedCategory, string SelectedAgent);
-public record ConditionalRoutingResponse(
-    RoutingDecisionResponse Routing,
-    string FinalResponse,
-    List<AgentStepResultResponse> AgentResults,
-    int TotalTokens,
-    long ExecutionTimeMs);
-
 // Handoff models
 public record HandoffEventResponse(string FromAgent, string ToAgent, string Reason);
 public record HandoffResponse(

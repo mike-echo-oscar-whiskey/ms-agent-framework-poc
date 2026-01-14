@@ -227,36 +227,7 @@ public class WorkflowsController : ControllerBase
     }
 
     /// <summary>
-    /// Demonstrates conditional routing based on agent classification.
-    /// </summary>
-    [HttpPost("execute/conditional-routing")]
-    public async Task<IActionResult> ExecuteConditionalRouting(
-        [FromBody] DemoWorkflowRequest request,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var result = await _workflowService.ExecuteConditionalRoutingAsync(
-                request.Input,
-                cancellationToken);
-
-            return Ok(new ConditionalRoutingResponse(
-                new RoutingDecisionResponse(result.Routing.DetectedCategory, result.Routing.SelectedAgent),
-                result.FinalResponse,
-                result.AgentResults.Select(r => new AgentStepResultResponse(
-                    r.AgentName, r.Input, r.Output, r.TokensUsed, r.ExecutionTimeMs)).ToList(),
-                result.TotalTokens,
-                result.ExecutionTimeMs));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Conditional routing failed");
-            return BadRequest(new ErrorResponse($"Conditional routing failed: {ex.Message}"));
-        }
-    }
-
-    /// <summary>
-    /// Demonstrates agent handoff pattern.
+    /// Demonstrates agent handoff pattern using MAF's HandoffsWorkflowBuilder.
     /// </summary>
     [HttpPost("execute/handoff")]
     public async Task<IActionResult> ExecuteHandoff(
